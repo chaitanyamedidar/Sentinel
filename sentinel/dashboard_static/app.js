@@ -26,6 +26,44 @@ function node(tag, className, value) {
   return element;
 }
 
+function linkNode(href, label = "Evidence") {
+  const link = node("a", "external-link", label);
+  link.href = href;
+  link.rel = "noreferrer";
+  link.target = "_blank";
+  return link;
+}
+
+function shortSha(value) {
+  const sha = text(value, "");
+  return sha.length > 7 ? sha.slice(0, 7) : sha || "n/a";
+}
+
+function vectorLabel(value) {
+  return text(value, "security_signal")
+    .replace(/_/g, " ")
+    .replace(/\blte\b/g, "<=")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function prLookup(pullRequests) {
+  return new Map((pullRequests || [])
+    .filter((pr) => pr.head_sha)
+    .map((pr) => [String(pr.head_sha), pr]));
+}
+
+function evidenceUrlForCommit(commitSha, pullRequests) {
+  const pr = prLookup(pullRequests).get(String(commitSha || ""));
+  if (pr && String(pr.url || "").startsWith("https://github.com/")) {
+    return pr.url;
+  }
+  const repository = pr?.repository;
+  if (repository && commitSha) {
+    return `https://github.com/${repository}/commit/${commitSha}`;
+  }
+  return "";
+}
+
 function emptyNode(message) {
   const item = node("div", "compact-item empty");
   item.append(node("span", "muted", message));
@@ -40,13 +78,13 @@ function setStatus(message, kind = "ok") {
 
 async function refresh() {
   setStatus("Refreshing live security data...", "loading");
-  const responses = await Promise.allSettled([
-    getJson("/api/dashboard/summary"),
-    getJson("/api/dashboard/findings"),
-    getJson("/api/dashboard/activity"),
-    getJson("/api/dashboard/admin"),
-  ]);
-  const [summaryResult, findingsResult, activityResult, adminResult] = responses;
+  const summaryResult = await settledJson("/api/dashboard/summary");
+  const adminResult = await settledJson("/api/dashboard/admin");
+  const findingsResult = await settledJson("/api/dashboard/findings");
+  const activityResult = await settledJson("/api/dashboard/activity");
+  const responses = [summaryResult, adminResult, findingsResult, activityResult];
+  const admin = adminResult.status === "fulfilled" ? adminResult.value : { pull_requests: [], milestones: [] };
+  const pullRequests = admin.pull_requests || [];
 
   if (summaryResult.status === "fulfilled") {
     const summary = summaryResult.value;
@@ -61,26 +99,41 @@ async function refresh() {
   }
   if (findingsResult.status === "fulfilled") {
     const findings = findingsResult.value;
-    renderFindings(findings.alerts);
-    renderVulnerabilities(findings.vulnerabilities, findings.supply_chain, findings.mcp);
+    renderFindings(findings.alerts || [], pullRequests);
+    renderVulnerabilities(findings.vulnerabilities || [], findings.supply_chain || [], findings.mcp || [], pullRequests);
   }
   if (activityResult.status === "fulfilled") {
     const activity = activityResult.value;
-    renderActivity(activity.audit_events);
-    renderVectorCounts(activity.vector_counts);
+    renderActivity(activity.audit_events || []);
+    renderVectorCounts(activity.vector_counts || {});
   }
   if (adminResult.status === "fulfilled") {
-    const admin = adminResult.value;
-    renderPullRequests(admin.pull_requests);
-    renderMilestones(admin.milestones);
+    renderPullRequests(pullRequests);
+    renderMilestones(admin.milestones || []);
   }
 
   const failures = responses.filter((result) => result.status === "rejected");
   if (failures.length) {
-    setStatus(`${failures.length} dashboard data request(s) failed. Retrying automatically.`, "error");
+    const failedNames = responses
+      .filter((result) => result.status === "rejected")
+      .map((result) => result.url)
+      .join(", ");
+    const messages = responses
+      .filter((result) => result.status === "rejected")
+      .map((result) => result.reason.message)
+      .join(", ");
+    setStatus(`${failures.length} dashboard data request(s) failed: ${failedNames}. ${messages}`, "error");
     return;
   }
   setStatus(`Live data refreshed ${new Date().toLocaleTimeString()}`, "ok");
+}
+
+async function settledJson(url) {
+  try {
+    return { status: "fulfilled", url, value: await getJson(url) };
+  } catch (error) {
+    return { status: "rejected", url, reason: error };
+  }
 }
 
 function renderSources(sources) {
@@ -110,44 +163,54 @@ function renderActivity(events) {
   }) : [emptyNode("No repository activity has been recorded yet.")]));
 }
 
-function renderFindings(alerts) {
+function renderFindings(alerts, pullRequests = []) {
   const root = document.getElementById("findingList");
   root.replaceChildren(...(alerts.length ? alerts.slice(0, 12).map((alert) => {
-    const item = node("div", "finding");
+    const item = node("div", `finding ${classToken(alert.severity)}`);
     item.append(node("span", `pill ${classToken(alert.severity)}`, alert.severity));
     const details = node("div");
-    details.append(node("strong", "", alert.vector_type));
-    details.append(node("span", "muted", `${text(alert.actor_login)} | ${text(alert.summary)}`));
+    const evidence = evidenceUrlForCommit(alert.commit_sha, pullRequests);
+    const title = node("div", "finding-title");
+    title.append(node("strong", "", vectorLabel(alert.vector_type)));
+    if (evidence) title.append(linkNode(evidence, `PR / commit ${shortSha(alert.commit_sha)}`));
+    details.append(title);
+    details.append(node("span", "muted", `${text(alert.actor_login)} | ${text(alert.summary)} | provider ${text(alert.detection_provider)}`));
     item.append(details);
     item.append(node("span", "muted score", alert.score));
     return item;
   }) : [emptyNode("No active detections are currently recorded.")]));
 }
 
-function renderVulnerabilities(vulnerabilities, supplyChain, mcp) {
+function renderVulnerabilities(vulnerabilities, supplyChain, mcp, pullRequests = []) {
   const root = document.getElementById("vulnerabilityList");
   const rows = [
     ...vulnerabilities.map((item) => ({
       severity: item.severity,
       title: `${text(item.package_name)} ${text(item.vuln_id)}`,
       meta: `${text(item.ecosystem)} | commit ${text(item.commit_sha)} | ${text(item.written_at)}`,
+      href: evidenceUrlForCommit(item.commit_sha, pullRequests),
     })),
     ...supplyChain.map((item) => ({
       severity: item.severity,
       title: `${text(item.package_name)} ${text(item.version, "")}`,
       meta: `${text(item.ecosystem)} | ${text(item.issue_type)} | provider ${text(item.provider)}`,
+      href: evidenceUrlForCommit(item.commit_sha, pullRequests),
     })),
     ...mcp.map((item) => ({
       severity: item.severity,
       title: `${text(item.skill_name)}: ${text(item.finding_type)}`,
       meta: `${text(item.file_path)} | scanned ${text(item.scanned_at)}`,
+      href: "",
     })),
   ].slice(0, 12);
   root.replaceChildren(...(rows.length ? rows.map((row) => {
     const item = node("div", "risk-row");
     item.append(node("span", `pill ${classToken(row.severity)}`, row.severity));
     const details = node("div");
-    details.append(node("strong", "", row.title));
+    const title = node("div", "finding-title");
+    title.append(node("strong", "", row.title));
+    if (row.href) title.append(linkNode(row.href, "Evidence"));
+    details.append(title);
     details.append(node("span", "muted", row.meta));
     item.append(details);
     return item;
@@ -173,6 +236,7 @@ function renderPullRequests(pullRequests) {
     meta.append(node("span", "", pr.repository));
     meta.append(node("span", "", pr.actor_login));
     meta.append(node("span", "", pr.status));
+    meta.append(node("span", "", `commit ${shortSha(pr.head_sha)}`));
     meta.append(node("span", "", `${text(pr.open_alerts, "0")} alerts`));
     meta.append(node("span", "", `${text(pr.vulnerabilities, "0")} vulnerabilities`));
     const milestone = node("div", "muted", `Milestone: ${text(pr.milestone)}${pr.milestone_due_on ? ` | due ${pr.milestone_due_on}` : ""}`);

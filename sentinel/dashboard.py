@@ -18,7 +18,10 @@ def dashboard_router(settings: Settings, store: SentinelStore) -> APIRouter:
 
     @router.get("/")
     async def dashboard_home() -> FileResponse:
-        return FileResponse(static_dir / "index.html")
+        return FileResponse(
+            static_dir / "index.html",
+            headers={"Cache-Control": "no-store"},
+        )
 
     @router.get("/api/dashboard/summary")
     async def summary() -> dict[str, Any]:
@@ -56,7 +59,10 @@ def dashboard_router(settings: Settings, store: SentinelStore) -> APIRouter:
 
     @router.get("/api/dashboard/activity")
     async def activity() -> dict[str, Any]:
-        audit_events = await store.fetch_recent("audit_events", "created_at", 50)
+        audit_events = await store.fetch_rows(
+            "SELECT event_id, actor_login, action, repository, head_sha, ip_address, created_at "
+            "FROM audit_events ORDER BY created_at DESC LIMIT 50"
+        )
         briefs = await store.fetch_recent("brief_deliveries", "sent_at", 25)
         vector_counts = Counter(row["vector_type"] for row in await store.fetch_recent("alert_events", "created_at", 100) if row.get("vector_type"))
         return {"audit_events": audit_events, "briefs": briefs, "vector_counts": dict(vector_counts)}

@@ -292,6 +292,15 @@ button.secondary { background: rgba(148, 163, 184, 0.16); color: #d9e8f2; border
   gap: 12px;
   align-items: center;
 }
+.finding.critical { border-color: rgba(251, 113, 133, 0.46); }
+.finding.high { border-color: rgba(245, 158, 11, 0.4); }
+.finding-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.finding-title strong { margin-bottom: 0; }
 .score { text-align: right; font-weight: 800; }
 .pill {
   justify-self: start;
