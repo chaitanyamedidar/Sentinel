@@ -1,4 +1,5 @@
 # SENTINEL
+**Demmo Video** - https://youtu.be/gIZY1S3MIdg
 
 SENTINEL is an async, read-only security agent for open-source repositories. It watches pull requests, package changes, workflow files, AI-agent configs, Slack/Jira approval context, and local findings, then turns that evidence into deterministic Discord and Slack alerts.
 
