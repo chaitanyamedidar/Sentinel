@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 SCORING_RULES = {
     "oauth_grant_no_approval": 40, "workspace_oauth_broad_scope": 35, "maintainer_anomalous_ip": 30,
-    "supply_chain_malicious_package": 35, "osv_critical": 30, "osv_high": 15,
+    "supply_chain_malicious_package": 35, "osv_critical": 60, "osv_high": 60,
     "package_age_under_48h": 35, "maintainer_account_under_30d": 25, "has_postinstall_script": 30,
     "typosquat_distance_lte_2": 40, "no_source_repo": 20, "workflow_permission_escalation": 60,
     "unpinned_external_action": 60, "credential_in_pr_body": 35, "credential_in_pr_comment": 30,
@@ -16,7 +16,7 @@ SCORING_RULES = {
 }
 TRUST_MODIFIERS = {"core_maintainer_over_1yr": -20, "first_time_contributor": 20}
 BOT_ALLOWLIST = {"dependabot[bot]", "renovate[bot]", "github-actions[bot]"}
-BYPASS_BUFFER = {"credential_in_pr_body", "credential_in_pr_comment", "supply_chain_malicious_package", "package_age_under_48h", "mcp_tool_poisoning_detected", "malicious_skill_md_detected", "ci_exfiltration_script_detected", "unsigned_commit_core_maintainer"}
+BYPASS_BUFFER = {"credential_in_pr_body", "credential_in_pr_comment", "supply_chain_malicious_package", "osv_critical", "osv_high", "package_age_under_48h", "mcp_tool_poisoning_detected", "malicious_skill_md_detected", "ci_exfiltration_script_detected", "unsigned_commit_core_maintainer"}
 DEDUP_BYPASS = {"credential_in_pr_body", "credential_in_pr_comment", "mcp_tool_poisoning_detected", "malicious_skill_md_detected"}
 BOOLEAN_FLAG_TO_RULE = {
     "ci_exfiltration_detected": "ci_exfiltration_script_detected",

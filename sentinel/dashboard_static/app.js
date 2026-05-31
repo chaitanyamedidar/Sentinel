@@ -40,27 +40,46 @@ function setStatus(message, kind = "ok") {
 
 async function refresh() {
   setStatus("Refreshing live security data...", "loading");
-  const [summary, findings, activity, admin] = await Promise.all([
+  const responses = await Promise.allSettled([
     getJson("/api/dashboard/summary"),
     getJson("/api/dashboard/findings"),
     getJson("/api/dashboard/activity"),
     getJson("/api/dashboard/admin"),
   ]);
+  const [summaryResult, findingsResult, activityResult, adminResult] = responses;
 
-  set("provider", summary.provider);
-  set("totalAlerts", summary.total_alerts);
-  set("criticalAlerts", summary.critical);
-  set("vulnerabilities", summary.vulnerabilities);
-  set("pullRequests", summary.pull_requests);
-  set("milestones", summary.milestones);
-  set("sources", `${summary.connected_sources} / ${summary.total_sources}`);
-  renderSources(summary.source_health);
-  renderActivity(activity.audit_events);
-  renderFindings(findings.alerts);
-  renderVulnerabilities(findings.vulnerabilities, findings.supply_chain, findings.mcp);
-  renderPullRequests(admin.pull_requests);
-  renderMilestones(admin.milestones);
-  renderVectorCounts(activity.vector_counts);
+  if (summaryResult.status === "fulfilled") {
+    const summary = summaryResult.value;
+    set("provider", summary.provider);
+    set("totalAlerts", summary.total_alerts);
+    set("criticalAlerts", summary.critical);
+    set("vulnerabilities", summary.vulnerabilities);
+    set("pullRequests", summary.pull_requests);
+    set("milestones", summary.milestones);
+    set("sources", `${summary.connected_sources} / ${summary.total_sources}`);
+    renderSources(summary.source_health);
+  }
+  if (findingsResult.status === "fulfilled") {
+    const findings = findingsResult.value;
+    renderFindings(findings.alerts);
+    renderVulnerabilities(findings.vulnerabilities, findings.supply_chain, findings.mcp);
+  }
+  if (activityResult.status === "fulfilled") {
+    const activity = activityResult.value;
+    renderActivity(activity.audit_events);
+    renderVectorCounts(activity.vector_counts);
+  }
+  if (adminResult.status === "fulfilled") {
+    const admin = adminResult.value;
+    renderPullRequests(admin.pull_requests);
+    renderMilestones(admin.milestones);
+  }
+
+  const failures = responses.filter((result) => result.status === "rejected");
+  if (failures.length) {
+    setStatus(`${failures.length} dashboard data request(s) failed. Retrying automatically.`, "error");
+    return;
+  }
   setStatus(`Live data refreshed ${new Date().toLocaleTimeString()}`, "ok");
 }
 
@@ -216,6 +235,13 @@ async function askSentinel() {
 }
 
 async function boot() {
+  renderSources([]);
+  renderActivity([]);
+  renderFindings([]);
+  renderVulnerabilities([], [], []);
+  renderPullRequests([]);
+  renderMilestones([]);
+  renderVectorCounts({});
   document.getElementById("askButton").addEventListener("click", askSentinel);
   document.getElementById("refreshButton").addEventListener("click", () => {
     refresh().catch((error) => setStatus(`Dashboard refresh failed: ${error.message}`, "error"));

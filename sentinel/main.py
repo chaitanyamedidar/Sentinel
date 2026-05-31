@@ -187,7 +187,12 @@ async def _process_event(headers: dict[str, str], payload: dict[str, Any]) -> No
                 event = apply_attack_flags(event, flags)
                 await state.store.insert("audit_events", event.as_row(), lock_key=event.head_sha or event.event_id)
         try:
-            await scan_osv(event.head_sha, packages, state.store)
+            for finding in await scan_osv(event.head_sha, packages, state.store):
+                severity = str(finding.get("severity") or "").upper()
+                if severity == "CRITICAL":
+                    direct_vectors.append("osv_critical")
+                elif severity == "HIGH":
+                    direct_vectors.append("osv_high")
         except Exception:
             LOGGER.exception("OSV enrichment failed commit=%s", event.head_sha)
         try:
@@ -304,7 +309,7 @@ def _vector_label(vector: str) -> str:
     return vector.replace("_", " ").replace(" lte ", " <= ").title()
 
 def _with_evidence(alert: Alert, repository: str, payload: dict[str, Any]) -> Alert:
-    provider = alert.detection_provider or ("sentinel" if alert.vector_type.startswith(("credential_", "workflow_", "mcp_", "malicious_", "ci_", "first_time_", "force_push_", "unsigned_", "action_")) else "")
+    provider = alert.detection_provider or ("osv" if alert.vector_type.startswith("osv_") else "sentinel" if alert.vector_type.startswith(("credential_", "workflow_", "mcp_", "malicious_", "ci_", "first_time_", "force_push_", "unsigned_", "action_")) else "")
     evidence_url = _payload_evidence_url(alert, repository, payload) or alert.evidence_url
     return replace(alert, repository=repository, evidence_url=evidence_url, detection_provider=provider)
 

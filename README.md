@@ -189,3 +189,26 @@ coral source test sentinel
 - Add a hosted dashboard deployment profile.
 - Add more provider adapters behind the same findings schema.
 - Add release-note generation from Coral macro results.
+
+## Learning & Growth
+
+I had never used Coral before this hackathon. I knew the problem I wanted to solve - supply-chain attacks against open-source repositories - but I had to learn where Coral should sit in the architecture.
+
+The biggest early mistake was assuming Coral's bundled GitHub source exposed a `github.audit_log` table. It does not, and GitHub audit logs also require higher org access than GitHub Free provides. The fix was to create `sentinel.audit_events`, populated from signed GitHub webhooks, then mirror those rows into JSONL for Coral.
+
+I also learned that Coral should stay as the read/correlation layer, not the write or dispatch layer. Python handles enrichment, scoring, Discord/Slack delivery, and provider APIs. Coral handles source specs and fixed SQL macros. Once that boundary was clear, the system became much easier to reason about.
+
+The most important architectural insight was the LEFT JOIN absence pattern. A missing Slack approval, missing Jira ticket, or missing identity mapping can be detected as structured SQL evidence. That made Coral central to SENTINEL: it is not just a convenience layer, it is the correlation layer that turns separate sources into one security decision.
+
+During the build, several practical issues changed the design:
+
+- `sentinel.audit_events` replaced the unavailable `github.audit_log` table.
+- DuckDB became the canonical write store, with JSONL mirrors for Coral.
+- Discord and Slack writes stayed in Python because they are dispatch targets, not Coral sources.
+- External enrichment was made fail-open so deterministic findings still alert if Socket, OSV, npm, PyPI, or mcp-scan fail.
+- A 10-second debounce queue was added so multiple findings on one commit become one alert instead of hitting Discord rate limits.
+- mcp-scan became event-driven when PRs touch `SKILL.md`, `.cursor/rules`, `mcp.json`, or agent config paths.
+
+Research into recent open-source incidents also expanded the vector set. SENTINEL now includes checks for unsigned maintainer commits, CI exfiltration scripts, orphan package owner changes, first-time contributors targeting self-hosted runners, force-push after approval, and GitHub Action typosquatting.
+
+If I rebuilt it, I would validate Coral source specs first, then build the application around those queryable tables. Source spec first, application code second.
