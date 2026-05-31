@@ -92,6 +92,7 @@ Live demo PRs are available in `chaitanyamedidar/sentinel-demo-repo`:
 - PR #6: GitHub Action typosquat fixture.
 
 SENTINEL also includes dashboard demo scenarios for identity/audit vectors that are difficult to reproduce safely on GitHub Free.
+<img width="1440" height="1000" alt="image" src="https://github.com/user-attachments/assets/1f0aa414-26c0-4b79-81f7-7b0d1f4a00b9" />
 
 
 
