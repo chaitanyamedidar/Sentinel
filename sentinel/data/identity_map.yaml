@@ -1,0 +1,6 @@
+# Maintainers self-register identity mappings by PR.
+# - github_login: octocat
+#   slack_id: U123456
+#   jira_handle: octocat
+#   workspace_email: octocat@example.com
+[]

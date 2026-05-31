@@ -1,0 +1,9 @@
+[project]
+name = "sentinel-v4"
+version = "0.1.0"
+description = "Async read-only security agent powered by Coral"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

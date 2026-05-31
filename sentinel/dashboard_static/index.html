@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SENTINEL Admin Dashboard</title>
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body>
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">S</div>
+        <div>
+          <strong>SENTINEL</strong>
+          <span>Security Operations</span>
+        </div>
+      </div>
+      <nav>
+        <a class="active" href="#overview">Overview</a>
+        <a href="#pull-requests">Pull Requests</a>
+        <a href="#vulnerability-section">Vulnerabilities</a>
+        <a href="#milestone-section">Milestones</a>
+        <a href="#activity">Activity</a>
+      </nav>
+      <section class="side-section">
+        <p class="label">Provider</p>
+        <strong id="provider">socket</strong>
+      </section>
+      <section class="side-section">
+        <p class="label">Source Health</p>
+        <div id="sourceHealth" class="source-list"></div>
+      </section>
+    </aside>
+
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Repository security administration</p>
+          <h1>SENTINEL Admin Dashboard</h1>
+        </div>
+        <div class="sentinel-visual" aria-hidden="true">
+          <span class="radar-ring outer"></span>
+          <span class="radar-ring middle"></span>
+          <span class="radar-ring inner"></span>
+          <span class="radar-sweep"></span>
+          <span class="radar-point p1"></span>
+          <span class="radar-point p2"></span>
+          <span class="radar-point p3"></span>
+        </div>
+        <div class="top-actions">
+          <input id="intentInput" value="are we safe to release?" aria-label="Sentinel query" />
+          <button id="askButton">Ask Sentinel</button>
+          <button id="refreshButton" class="secondary">Refresh</button>
+        </div>
+      </header>
+
+      <div id="systemStatus" class="system-status loading">Loading live security data...</div>
+
+      <section id="overview" class="metrics-grid">
+        <article class="metric"><span>Total Alerts</span><strong id="totalAlerts">0</strong></article>
+        <article class="metric critical"><span>Critical</span><strong id="criticalAlerts">0</strong></article>
+        <article class="metric"><span>Vulnerabilities</span><strong id="vulnerabilities">0</strong></article>
+        <article class="metric"><span>Pull Requests</span><strong id="pullRequests">0</strong></article>
+        <article class="metric"><span>Milestones</span><strong id="milestones">0</strong></article>
+        <article class="metric"><span>Sources</span><strong id="sources">0 / 0</strong></article>
+      </section>
+
+      <section class="content-grid">
+        <article id="pull-requests" class="panel wide-panel">
+          <div class="panel-head">
+            <div>
+              <p class="label">Pull Requests</p>
+              <h2>Risk and release readiness</h2>
+            </div>
+          </div>
+          <div id="pullRequestList" class="stack-list"></div>
+        </article>
+
+        <article id="findings" class="panel">
+          <div class="panel-head">
+            <div>
+              <p class="label">Detections</p>
+              <h2>Active alerts</h2>
+            </div>
+          </div>
+          <div id="findingList" class="finding-list"></div>
+        </article>
+      </section>
+
+      <section class="content-grid lower">
+        <article id="vulnerability-section" class="panel">
+          <div class="panel-head">
+            <div>
+              <p class="label">Vulnerabilities</p>
+              <h2>Packages and agent configuration</h2>
+            </div>
+          </div>
+          <div id="vulnerabilityList" class="stack-list"></div>
+        </article>
+
+        <article id="milestone-section" class="panel">
+          <div class="panel-head">
+            <div>
+              <p class="label">Milestones</p>
+              <h2>Security review status</h2>
+            </div>
+          </div>
+          <div id="milestoneList" class="stack-list"></div>
+        </article>
+      </section>
+
+      <section class="content-grid lower">
+        <article id="activity" class="panel">
+          <div class="panel-head">
+            <div>
+              <p class="label">Repository Activity</p>
+              <h2>Recent audit events</h2>
+            </div>
+          </div>
+          <div id="activityList" class="timeline"></div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head">
+            <div>
+              <p class="label">Alert Mix</p>
+              <h2>Detection vectors</h2>
+            </div>
+          </div>
+          <div id="vectorList" class="source-list"></div>
+        </article>
+      </section>
+
+      <section class="panel response-panel">
+        <div class="panel-head">
+          <div>
+            <p class="label">Sentinel Query</p>
+            <h2>Fixed macro response</h2>
+          </div>
+        </div>
+        <pre id="sentinelResponse">Ask a release, credential, workflow, actor, or supply-chain question.</pre>
+      </section>
+    </main>
+
+    <script src="/assets/app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,122 @@
+name: sentinel
+version: 0.1.0
+dsl_version: 3
+backend: file
+description: SENTINEL JSONL mirror queried by Coral.
+test_queries:
+  - SELECT * FROM sentinel.audit_events LIMIT 1
+  - SELECT * FROM sentinel.supply_chain_findings LIMIT 1
+tables:
+  - name: audit_events
+    description: Normalized GitHub webhook and optional audit events.
+    format: jsonl
+    source: {location: file:///E:/Files/Projects/SENTINEL/runtime/coral-data/, glob: audit_events.jsonl}
+    columns:
+      - {name: event_id, type: Utf8}
+      - {name: actor_login, type: Utf8}
+      - {name: action, type: Utf8}
+      - {name: repository, type: Utf8}
+      - {name: head_sha, type: Utf8}
+      - {name: ip_address, type: Utf8}
+      - {name: created_at, type: Timestamp}
+      - {name: raw_payload, type: Json}
+      - {name: ci_exfiltration_detected, type: Boolean}
+      - {name: self_hosted_first_actor, type: Boolean}
+      - {name: force_push_after_approval, type: Boolean}
+      - {name: unsigned_maintainer_commit, type: Boolean}
+      - {name: action_typosquat_detected, type: Boolean}
+      - {name: orphan_pkg_owner_change, type: Boolean}
+  - name: supply_chain_findings
+    description: Provider-agnostic supply chain findings.
+    format: jsonl
+    source: {location: file:///E:/Files/Projects/SENTINEL/runtime/coral-data/, glob: supply_chain_findings.jsonl}
+    columns:
+      - {name: commit_sha, type: Utf8}
+      - {name: package_name, type: Utf8}
+      - {name: version, type: Utf8}
+      - {name: ecosystem, type: Utf8}
+      - {name: issue_type, type: Utf8}
+      - {name: severity, type: Utf8}
+      - {name: risk_score, type: Float64}
+      - {name: provider, type: Utf8}
+      - {name: written_at, type: Timestamp}
+  - name: osv_findings
+    description: OSV vulnerabilities found for commit dependencies.
+    format: jsonl
+    source: {location: file:///E:/Files/Projects/SENTINEL/runtime/coral-data/, glob: osv_findings.jsonl}
+    columns:
+      - {name: commit_sha, type: Utf8}
+      - {name: package_name, type: Utf8}
+      - {name: vuln_id, type: Utf8}
+      - {name: severity, type: Utf8}
+      - {name: ecosystem, type: Utf8}
+      - {name: written_at, type: Timestamp}
+  - name: enriched_packages
+    description: Registry-derived package behavior and age signals.
+    format: jsonl
+    source: {location: file:///E:/Files/Projects/SENTINEL/runtime/coral-data/, glob: enriched_packages.jsonl}
+    columns:
+      - {name: commit_sha, type: Utf8}
+      - {name: package_name, type: Utf8}
+      - {name: package_age_hours, type: Float64}
+      - {name: maintainer_age_days, type: Int64}
+      - {name: has_postinstall, type: Boolean}
+      - {name: name_edit_distance, type: Int64}
+      - {name: source_repo_present, type: Boolean}
+      - {name: written_at, type: Timestamp}
+  - name: mcp_scan_findings
+    description: mcp-scan findings for agent skill and MCP configuration changes.
+    format: jsonl
+    source: {location: file:///E:/Files/Projects/SENTINEL/runtime/coral-data/, glob: mcp_scan_findings.jsonl}
+    columns:
+      - {name: actor, type: Utf8}
+      - {name: skill_name, type: Utf8}
+      - {name: finding_type, type: Utf8}
+      - {name: severity, type: Utf8}
+      - {name: file_path, type: Utf8}
+      - {name: scanned_at, type: Timestamp}
+  - name: alert_events
+    description: Scored alerts emitted by SENTINEL.
+    format: jsonl
+    source: {location: file:///E:/Files/Projects/SENTINEL/runtime/coral-data/, glob: alert_events.jsonl}
+    columns:
+      - {name: commit_sha, type: Utf8}
+      - {name: actor_login, type: Utf8}
+      - {name: vector_type, type: Utf8}
+      - {name: score, type: Int64}
+      - {name: severity, type: Utf8}
+      - {name: detection_provider, type: Utf8}
+      - {name: summary, type: Utf8}
+      - {name: created_at, type: Timestamp}
+  - name: brief_deliveries
+    description: Onboarding brief delivery log.
+    format: jsonl
+    source: {location: file:///E:/Files/Projects/SENTINEL/runtime/coral-data/, glob: brief_deliveries.jsonl}
+    columns:
+      - {name: actor, type: Utf8}
+      - {name: tier, type: Utf8}
+      - {name: sent_at, type: Timestamp}
+      - {name: channel, type: Utf8}
+      - {name: status, type: Utf8}
+  - name: dedup_cache
+    description: 24 hour alert deduplication cache.
+    format: jsonl
+    source: {location: file:///E:/Files/Projects/SENTINEL/runtime/coral-data/, glob: dedup_cache.jsonl}
+    columns:
+      - {name: dedup_key, type: Utf8}
+      - {name: commit_sha, type: Utf8}
+      - {name: actor_login, type: Utf8}
+      - {name: vector_type, type: Utf8}
+      - {name: expires_at, type: Timestamp}
+      - {name: created_at, type: Timestamp}
+  - name: enrichment_cache
+    description: 24 hour provider enrichment cache by commit and dependency hash.
+    format: jsonl
+    source: {location: file:///E:/Files/Projects/SENTINEL/runtime/coral-data/, glob: enrichment_cache.jsonl}
+    columns:
+      - {name: cache_key, type: Utf8}
+      - {name: commit_sha, type: Utf8}
+      - {name: provider, type: Utf8}
+      - {name: dependency_hash, type: Utf8}
+      - {name: expires_at, type: Timestamp}
+      - {name: created_at, type: Timestamp}

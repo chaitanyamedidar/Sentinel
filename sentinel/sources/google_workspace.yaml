@@ -1,0 +1,32 @@
+name: google_workspace_sentinel
+description: Optional read-only Google Workspace Admin audit placeholder for SENTINEL.
+version: 0.1.0
+dsl_version: 3
+backend: http
+inputs:
+  GOOGLE_WORKSPACE_API_BASE: {kind: variable, default: https://admin.googleapis.com/admin/reports/v1}
+  GOOGLE_WORKSPACE_TOKEN: {kind: secret, hint: Workspace Admin SDK bearer token}
+base_url: "{{input.GOOGLE_WORKSPACE_API_BASE}}"
+auth:
+  type: HeaderAuth
+  headers:
+    - name: Authorization
+      from: template
+      template: Bearer {{input.GOOGLE_WORKSPACE_TOKEN}}
+tables:
+  - name: activities
+    description: Workspace audit activities for one application.
+    filters:
+      - {name: user_key, required: true}
+      - {name: application_name, required: true}
+    request:
+      method: GET
+      path: /activity/users/{{filter.user_key}}/applications/{{filter.application_name}}
+    response:
+      rows_path: [items]
+      row_strategy: direct
+    pagination: {mode: none}
+    columns:
+      - {name: id, type: Json}
+      - {name: actor, type: Json}
+      - {name: events, type: Json}

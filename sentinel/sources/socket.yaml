@@ -1,0 +1,30 @@
+name: socket
+description: Read package risk metadata from Socket.dev.
+version: 0.1.0
+dsl_version: 3
+backend: http
+inputs:
+  SOCKET_API_BASE: {kind: variable, default: https://api.socket.dev/v0}
+  SOCKET_API_KEY: {kind: secret, hint: Socket API key}
+base_url: "{{input.SOCKET_API_BASE}}"
+auth:
+  type: BasicAuth
+  username: api
+  password: "{{input.SOCKET_API_KEY}}"
+tables:
+  - name: npm_package_issues
+    description: Socket issue metadata for one npm package and version.
+    filters:
+      - {name: package_name, required: true}
+      - {name: version, required: true}
+    request:
+      method: GET
+      path: /npm/{{filter.package_name}}/{{filter.version}}/issues
+    response:
+      rows_path: [issues]
+      row_strategy: direct
+    pagination: {mode: none}
+    columns:
+      - {name: type, type: Utf8}
+      - {name: severity, type: Utf8}
+      - {name: description, type: Utf8}

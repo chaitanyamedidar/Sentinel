@@ -1,0 +1,35 @@
+name: phylum_sentinel
+description: Minimal Phylum package risk source for SENTINEL validation.
+version: 0.1.0
+dsl_version: 3
+backend: http
+inputs:
+  PHYLUM_API_BASE: {kind: variable, default: https://api.phylum.io/api/v0}
+  PHYLUM_API_KEY: {kind: secret, hint: Phylum bearer token}
+base_url: "{{input.PHYLUM_API_BASE}}"
+auth:
+  type: HeaderAuth
+  headers:
+    - name: Authorization
+      from: template
+      template: Bearer {{input.PHYLUM_API_KEY}}
+request_headers:
+  - {name: Accept, from: literal, value: application/json}
+tables:
+  - name: packages
+    description: Phylum package details for one package version.
+    filters:
+      - {name: package_registry, required: true}
+      - {name: package_name, required: true}
+      - {name: package_version, required: true}
+    request:
+      method: GET
+      path: /data/packages/{{filter.package_registry}}/{{filter.package_name}}/{{filter.package_version}}
+    response:
+      row_strategy: direct
+    pagination: {mode: none}
+    columns:
+      - {name: name, type: Utf8}
+      - {name: version, type: Utf8}
+      - {name: registry, type: Utf8}
+      - {name: issues, type: Json}

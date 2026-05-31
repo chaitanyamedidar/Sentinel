@@ -1,0 +1,14 @@
+{
+  "action": "opened",
+  "sender": {"login": "new-contributor"},
+  "repository": {"full_name": "withcoral/demo"},
+  "pull_request": {
+    "head": {"sha": "abc123456789"},
+    "body": "Adds a package for demo",
+    "author_association": "FIRST_TIME_CONTRIBUTOR"
+  },
+  "sentinel_changed_files": ["package.json"],
+  "sentinel_dependencies": [
+    {"name": "demo-package", "version": "1.0.0", "ecosystem": "npm"}
+  ]
+}
