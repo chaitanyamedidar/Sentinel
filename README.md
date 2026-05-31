@@ -55,7 +55,8 @@ Natural language never becomes arbitrary SQL. Instead:
 2. `sentinel/coral/query.py` maps that intent to a fixed macro file.
 3. Coral executes the approved SQL macro, for example `sentinel/coral/macros/vw_release_blockers.sql`.
 4. SENTINEL returns a concise security brief with evidence links.
-
+   
+<img width="1474" height="854" alt="Screen Recording 2026-05-31 234746(1)" src="https://github.com/user-attachments/assets/96d48f96-889c-447b-8735-fcc865dd7bda" />
 This gives us meaningful joins over repo events, findings, approvals, tickets, package intelligence, and file-backed evidence without turning the LLM into a query author.
 
 ## Connected Data Sources
@@ -91,7 +92,7 @@ Live demo PRs are available in `chaitanyamedidar/sentinel-demo-repo`:
 - PR #6: GitHub Action typosquat fixture.
 
 SENTINEL also includes dashboard demo scenarios for identity/audit vectors that are difficult to reproduce safely on GitHub Free.
-<img width="1474" height="854" alt="Screen Recording 2026-05-31 234746(1)" src="https://github.com/user-attachments/assets/96d48f96-889c-447b-8735-fcc865dd7bda" />
+
 
 
 ## Architecture
