@@ -7,6 +7,7 @@ It is built for the Coral hackathon formula: real problem, multiple data sources
 ## What Problem We Solve
 
 Open-source maintainers now review more than code. A normal pull request can hide a leaked credential, a risky dependency, a workflow permission escalation, a poisoned AI-agent skill, or a GitHub Action typo that changes who gets trusted inside CI.
+<img width="2048" height="1117" alt="13" src="https://github.com/user-attachments/assets/f0c42a16-5dfa-4cf3-a983-015c99d9ba1a" />
 
 This is already happening:
 
@@ -20,6 +21,9 @@ This is already happening:
 SENTINEL focuses on the maintainer gap: CI may pass, but the repository attack surface has changed.
 
 ## What We Built
+<img width="2048" height="1117" alt="16" src="https://github.com/user-attachments/assets/b71b433e-c2e6-45ed-b9dd-3d9b463aad6a" />
+
+
 
 SENTINEL is a FastAPI service with:
 
@@ -39,6 +43,7 @@ SENTINEL is a FastAPI service with:
 SENTINEL does not block CI. It watches, correlates, scores, and routes evidence fast.
 
 ## How We Used Coral
+<img width="2048" height="1117" alt="14" src="https://github.com/user-attachments/assets/fe21f52b-cf50-47a2-bb53-dd02b3a85c5c" />
 
 Coral is the query layer.
 
