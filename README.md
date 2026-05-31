@@ -81,6 +81,7 @@ Optional / enterprise sources:
 - Google Workspace Admin SDK audit logs.
 
 ## Demo Attack Surfaces
+**Demo Video** - https://youtu.be/gIZY1S3MIdg
 
 Live demo PRs are available in `chaitanyamedidar/sentinel-demo-repo`:
 
